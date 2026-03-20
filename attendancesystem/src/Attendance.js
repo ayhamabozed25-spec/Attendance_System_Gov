@@ -55,7 +55,7 @@ function Attendance() {
   };
 
   const loadUsers = async () => {
-     if (modelsLoaded) {
+   
     const querySnapshot = await getDocs(collection(db, "users"));
     labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
       const data = doc.data();
@@ -64,7 +64,7 @@ function Attendance() {
         [new Float32Array(data.descriptor)]
       );
     });
-  }};
+  };
 
   const recognizeFace = async () => {
     const detections = await faceapi
