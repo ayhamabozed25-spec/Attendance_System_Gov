@@ -14,13 +14,15 @@ function Attendance() {
   }, []);
 
 
-let modelsLoaded = false;
+
 
 const loadModels = async () => {
-  await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
-  await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
-  await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
-  modelsLoaded = true;
+     const MODEL_URL = process.env.PUBLIC_URL + "/models";
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      setModelsLoaded(true);
+      console.log("Models loaded successfully");
 };
 
 
