@@ -5,7 +5,7 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 
 function Attendance() {
   const videoRef = useRef();
-  let labeledDescriptors = [];
+  const labeledDescriptorsRef = useRef([]);
 
   useEffect(() => {
     loadmodels();
@@ -55,16 +55,20 @@ const loadModels = async () => {
     };
   };
 
-  const loadUsers = async () => {
-    const querySnapshot = await getDocs(collection(db, "users"));
-    labeledDescriptors = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return new faceapi.LabeledFaceDescriptors(
-        data.name,
-        [new Float32Array(data.descriptor)]
-      );
-    });
-  };
+
+ 
+
+const loadUsers = async () => {
+  const querySnapshot = await getDocs(collection(db, "users"));
+  labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return new faceapi.LabeledFaceDescriptors(
+      data.name,
+      [new Float32Array(data.descriptor)]
+    );
+  });
+};
+
 
   const recognizeFace = async () => {
     const detections = await faceapi.detectSingleFace(videoRef.current).withFaceLandmarks().withFaceDescriptor();
@@ -85,7 +89,15 @@ const loadModels = async () => {
 
   return (
     <div>
+    <div>
       <video ref={videoRef} autoPlay width="400" height="300"></video>
+      <canvas
+          id="overlay"
+          width="400"
+          height="300"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        ></canvas>
+          </div> 
       <button onClick={recognizeFace}>تسجيل حضور</button>
     </div>
   );
