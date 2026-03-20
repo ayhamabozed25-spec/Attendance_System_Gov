@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import { db } from "./firebaseConfig";
 import { collection, addDoc } from "firebase/firestore";
@@ -6,6 +6,20 @@ import { collection, addDoc } from "firebase/firestore";
 function Register() {
   const videoRef = useRef();
   const [name, setName] = useState("");
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+
+  // تحميل النماذج عند بداية التشغيل
+  useEffect(() => {
+    const loadModels = async () => {
+      const MODEL_URL = process.env.PUBLIC_URL + "/models";
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      setModelsLoaded(true);
+      console.log("Models loaded successfully");
+    };
+    loadModels();
+  }, []);
 
   const startCamera = async () => {
     navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
@@ -14,19 +28,34 @@ function Register() {
   };
 
   const captureFace = async () => {
-    const detections = await faceapi.detectSingleFace(videoRef.current).withFaceLandmarks().withFaceDescriptor();
+    if (!modelsLoaded) {
+      alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
+      return;
+    }
+
+    const detections = await faceapi
+      .detectSingleFace(videoRef.current)
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
     if (detections) {
       await addDoc(collection(db, "users"), {
         name,
         descriptor: Array.from(detections.descriptor)
       });
       alert("تم تسجيل المستخدم بنجاح!");
+    } else {
+      alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
     }
   };
 
   return (
     <div>
-      <input type="text" placeholder="أدخل اسمك" onChange={e => setName(e.target.value)} />
+      <input
+        type="text"
+        placeholder="أدخل اسمك"
+        onChange={e => setName(e.target.value)}
+      />
       <video ref={videoRef} autoPlay width="400" height="300"></video>
       <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={captureFace}>تسجيل</button>
