@@ -15,8 +15,6 @@ function Attendance() {
   }, []);
 
 
-
-
 const loadModels = async () => {
      const MODEL_URL = process.env.PUBLIC_URL + "/models";
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
@@ -33,7 +31,7 @@ const loadModels = async () => {
     videoRef.current.srcObject = stream;
 
     videoRef.current.onplaying = () => {
-      const canvas = document.getElementById("overlay");
+      const canvas = document.getElementById("overlay1");
       const displaySize = {
         width: videoRef.current.width,
         height: videoRef.current.height,
@@ -95,7 +93,7 @@ const loadUsers = async () => {
     <div>
       <video ref={videoRef} autoPlay width="400" height="300"></video>
       <canvas
-          id="overlay"
+          id="overlay1"
           width="400"
           height="300"
           style={{ position: "absolute", top: 0, left: 0 }}
