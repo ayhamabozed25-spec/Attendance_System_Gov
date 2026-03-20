@@ -5,13 +5,11 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 
 function Attendance() {
   const videoRef = useRef();
-  const canvasRef = useRef();
   const labeledDescriptorsRef = useRef([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
 
   useEffect(() => {
     loadModels();
-    startCamera();
     loadUsers();
   }, []);
 
@@ -29,12 +27,12 @@ function Attendance() {
     videoRef.current.srcObject = stream;
 
     videoRef.current.onplaying = () => {
-      const canvas = canvasRef.current;
+      const canvasat = document.getElementById("overlayat");
       const displaySize = {
         width: videoRef.current.width,
         height: videoRef.current.height,
       };
-      faceapi.matchDimensions(canvas, displaySize);
+      faceapi.matchDimensions(canvasat, displaySize);
 
       setInterval(async () => {
         if (modelsLoaded) {
@@ -44,13 +42,13 @@ function Attendance() {
             .withFaceDescriptors();
 
           const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          const context = canvas.getContext("2d");
-          context.clearRect(0, 0, canvas.width, canvas.height);
+          const context = canvasat.getContext("2d");
+          context.clearRect(0, 0, canvasat.width, canvasat.height);
 
           // رسم المستطيل حول الوجه
-          faceapi.draw.drawDetections(canvas, resizedDetections);
+          faceapi.draw.drawDetections(canvasat, resizedDetections);
           // رسم العلامات (العينين، الأنف، إلخ)
-          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+          faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
         }
       }, 100);
     };
@@ -91,11 +89,12 @@ function Attendance() {
     <div style={{ position: "relative", width: "400px", height: "300px" }}>
       <video ref={videoRef} autoPlay width="400" height="300"></video>
       <canvas
-        ref={canvasRef}
+         id="overlayat"
         width="400"
         height="300"
         style={{ position: "absolute", top: 0, left: 0 }}
       ></canvas>
+      <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={recognizeFace}>تسجيل حضور</button>
     </div>
   );
