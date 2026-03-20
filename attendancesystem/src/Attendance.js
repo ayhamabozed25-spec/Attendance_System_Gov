@@ -74,7 +74,7 @@ const loadUsers = async () => {
   const recognizeFace = async () => {
     const detections = await faceapi.detectSingleFace(videoRef.current).withFaceLandmarks().withFaceDescriptor();
     if (detections) {
-      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef, 0.6);
+      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detections.descriptor);
       if (bestMatch.label !== "unknown") {
         await addDoc(collection(db, "attendance"), {
