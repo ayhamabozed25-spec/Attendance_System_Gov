@@ -86,6 +86,7 @@ function Attendance() {
   };
 
   return (
+    <div>
     <div style={{ position: "relative", width: "400px", height: "300px" }}>
       <video ref={videoRef} autoPlay width="400" height="300"></video>
       <canvas
@@ -94,6 +95,8 @@ function Attendance() {
         height="300"
         style={{ position: "absolute", top: 0, left: 0 }}
       ></canvas>
+        </div>
+        
       <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={recognizeFace}>تسجيل حضور</button>
     </div>
