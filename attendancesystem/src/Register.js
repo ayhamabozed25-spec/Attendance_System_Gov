@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import { db } from "./firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc ,setDoc,doc } from "firebase/firestore";
 
 function Register() {
   const videoRef = useRef();
@@ -39,11 +39,11 @@ function Register() {
       .withFaceDescriptor();
 
     if (detections) {
-      await addDoc(collection(db, "users"), {
-        name,
-        descriptor: Array.from(detections.descriptor)
-      });
-      alert("تم تسجيل المستخدم بنجاح!");
+       await setDoc(doc(db, "users", name), {
+  name,
+  descriptor: Array.from(detections.descriptor)
+});
+    alert("تم تسجيل المستخدم بنجاح!");
     } else {
       alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
     }
