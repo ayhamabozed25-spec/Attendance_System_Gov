@@ -8,10 +8,23 @@ function Attendance() {
   let labeledDescriptors = [];
 
   useEffect(() => {
+    loadmodels();
     startCamera();
     loadUsers();
   }, []);
 
+
+let modelsLoaded = false;
+
+const loadModels = async () => {
+  await faceapi.nets.ssdMobilenetv1.loadFromUri("/models");
+  await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+  await faceapi.nets.faceRecognitionNet.loadFromUri("/models");
+  modelsLoaded = true;
+};
+
+
+  
    const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     videoRef.current.srcObject = stream;
