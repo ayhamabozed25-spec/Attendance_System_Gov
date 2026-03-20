@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import { db } from "./firebaseConfig";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, addDoc, collection } from "firebase/firestore";
 
 function Register() {
   const videoRef = useRef();
@@ -47,7 +47,7 @@ function Register() {
           faceapi.draw.drawDetections(canvas, resizedDetections);
           faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
         }
-      }, 100); // يحدث كل 100ms
+      }, 100); // يحدث كل 100ms للرسم فقط
     };
   };
 
@@ -57,12 +57,18 @@ function Register() {
       return;
     }
 
+    if (!name || name.trim() === "") {
+      alert("الرجاء إدخال اسم قبل التسجيل");
+      return;
+    }
+
     const detections = await faceapi
       .detectAllFaces(videoRef.current)
       .withFaceLandmarks()
       .withFaceDescriptors();
 
     if (detections.length > 0) {
+      // حفظ أول وجه فقط عند الضغط على زر التسجيل
       await setDoc(doc(db, "users", name), {
         name,
         descriptor: Array.from(detections[0].descriptor),
