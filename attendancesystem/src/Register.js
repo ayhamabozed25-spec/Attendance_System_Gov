@@ -27,27 +27,42 @@ function Register() {
     });
   };
 
-  const captureFace = async () => {
-    if (!modelsLoaded) {
-      alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
-      return;
-    }
+const captureFace = async () => {
+  if (!modelsLoaded) {
+    alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
+    return;
+  }
 
-    const detections = await faceapi
-      .detectSingleFace(videoRef.current)
-      .withFaceLandmarks()
-      .withFaceDescriptor();
+  const detections = await faceapi
+    .detectAllFaces(videoRef.current)
+    .withFaceLandmarks()
+    .withFaceDescriptors();
 
-    if (detections) {
-       await setDoc(doc(db, "users", name), {
-  name,
-  descriptor: Array.from(detections.descriptor)
-});
+  if (detections.length > 0) {
+    // تجهيز canvas للرسم فوق الفيديو
+    const canvas = faceapi.createCanvasFromMedia(videoRef.current);
+    document.body.append(canvas); // أو ضع canvas داخل نفس الـ div
+    const displaySize = {
+      width: videoRef.current.width,
+      height: videoRef.current.height,
+    };
+    faceapi.matchDimensions(canvas, displaySize);
+
+    const resizedDetections = faceapi.resizeResults(detections, displaySize);
+    faceapi.draw.drawDetections(canvas, resizedDetections);
+    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+
+    // حفظ أول وجه
+    await setDoc(doc(db, "users", name), {
+      name,
+      descriptor: Array.from(detections[0].descriptor),
+    });
     alert("تم تسجيل المستخدم بنجاح!");
-    } else {
-      alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
-    }
-  };
+  } else {
+    alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
+  }
+};
+
 
   return (
     <div>
