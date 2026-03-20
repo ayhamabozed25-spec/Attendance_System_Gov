@@ -6,7 +6,8 @@ import { collection, getDocs, addDoc } from "firebase/firestore";
 function Attendance() {
   const videoRef = useRef();
   const labeledDescriptorsRef = useRef([]);
-
+  const [modelsLoaded, setModelsLoaded] = useState(false);
+  
   useEffect(() => {
     loadModels();
     startCamera();
