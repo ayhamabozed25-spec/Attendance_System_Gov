@@ -12,10 +12,34 @@ function Attendance() {
     loadUsers();
   }, []);
 
-  const startCamera = async () => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      videoRef.current.srcObject = stream;
-    });
+   const startCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoRef.current.srcObject = stream;
+
+    videoRef.current.onplaying = () => {
+      const canvas = document.getElementById("overlay");
+      const displaySize = {
+        width: videoRef.current.width,
+        height: videoRef.current.height,
+      };
+      faceapi.matchDimensions(canvas, displaySize);
+
+      setInterval(async () => {
+        if (modelsLoaded) {
+          const detections = await faceapi
+            .detectAllFaces(videoRef.current)
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          const context = canvas.getContext("2d");
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          faceapi.draw.drawDetections(canvas, resizedDetections);
+          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+        }
+      }, 100); // يحدث كل 100ms للرسم فقط
+    };
   };
 
   const loadUsers = async () => {
