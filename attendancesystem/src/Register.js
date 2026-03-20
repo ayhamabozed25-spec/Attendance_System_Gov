@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
 import { db } from "./firebaseConfig";
-import { collection, addDoc ,setDoc,doc } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 
 function Register() {
   const videoRef = useRef();
@@ -22,56 +22,73 @@ function Register() {
   }, []);
 
   const startCamera = async () => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      videoRef.current.srcObject = stream;
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoRef.current.srcObject = stream;
+
+    videoRef.current.onplaying = () => {
+      const canvas = document.getElementById("overlay");
+      const displaySize = {
+        width: videoRef.current.width,
+        height: videoRef.current.height,
+      };
+      faceapi.matchDimensions(canvas, displaySize);
+
+      setInterval(async () => {
+        if (modelsLoaded) {
+          const detections = await faceapi
+            .detectAllFaces(videoRef.current)
+            .withFaceLandmarks()
+            .withFaceDescriptors();
+
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          const context = canvas.getContext("2d");
+          context.clearRect(0, 0, canvas.width, canvas.height);
+
+          faceapi.draw.drawDetections(canvas, resizedDetections);
+          faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+        }
+      }, 100); // يحدث كل 100ms
+    };
   };
 
-const captureFace = async () => {
-  if (!modelsLoaded) {
-    alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
-    return;
-  }
+  const captureFace = async () => {
+    if (!modelsLoaded) {
+      alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
+      return;
+    }
 
-  const detections = await faceapi
-    .detectAllFaces(videoRef.current)
-    .withFaceLandmarks()
-    .withFaceDescriptors();
+    const detections = await faceapi
+      .detectAllFaces(videoRef.current)
+      .withFaceLandmarks()
+      .withFaceDescriptors();
 
-  if (detections.length > 0) {
-    // تجهيز canvas للرسم فوق الفيديو
-    const canvas = faceapi.createCanvasFromMedia(videoRef.current);
-    document.body.append(canvas); // أو ضع canvas داخل نفس الـ div
-    const displaySize = {
-      width: videoRef.current.width,
-      height: videoRef.current.height,
-    };
-    faceapi.matchDimensions(canvas, displaySize);
-
-    const resizedDetections = faceapi.resizeResults(detections, displaySize);
-    faceapi.draw.drawDetections(canvas, resizedDetections);
-    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-
-    // حفظ أول وجه
-    await setDoc(doc(db, "users", name), {
-      name,
-      descriptor: Array.from(detections[0].descriptor),
-    });
-    alert("تم تسجيل المستخدم بنجاح!");
-  } else {
-    alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
-  }
-};
-
+    if (detections.length > 0) {
+      await setDoc(doc(db, "users", name), {
+        name,
+        descriptor: Array.from(detections[0].descriptor),
+      });
+      alert("تم تسجيل المستخدم بنجاح!");
+    } else {
+      alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
+    }
+  };
 
   return (
     <div>
       <input
         type="text"
         placeholder="أدخل اسمك"
-        onChange={e => setName(e.target.value)}
+        onChange={(e) => setName(e.target.value)}
       />
-      <video ref={videoRef} autoPlay width="400" height="300"></video>
+      <div style={{ position: "relative", width: "400px", height: "300px" }}>
+        <video ref={videoRef} autoPlay width="400" height="300"></video>
+        <canvas
+          id="overlay"
+          width="400"
+          height="300"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        ></canvas>
+      </div>
       <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={captureFace}>تسجيل</button>
     </div>
