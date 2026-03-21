@@ -36,12 +36,12 @@ function Attendance() {
 
       setInterval(async () => {
         if (modelsLoaded) {
-          const detections = await faceapi
-            .detectAllFaces(videoRef.current)
-            .withFaceLandmarks()
-            .withFaceDescriptors();
+            const detection = await faceapi
+             .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
+             .withFaceLandmarks()
+             .withFaceDescriptor();
 
-          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          const resizedDetections = faceapi.resizeResults(detection, displaySize);
           const context = canvasat.getContext("2d");
           context.clearRect(0, 0, canvasat.width, canvasat.height);
 
@@ -68,24 +68,25 @@ function Attendance() {
 
   const recognizeFace = async () => {
 if (modelsLoaded) {
-    const detections = await faceapi
-  .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+   const detection = await faceapi
+  .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
   .withFaceLandmarks()
-  .withFaceDescriptors();
+  .withFaceDescriptor();
 
-if (detections.length > 0) {
-    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
-      const bestMatch = faceMatcher.findBestMatch(detections.descriptor);
-      if (bestMatch.label !== "unknown") {
-        await addDoc(collection(db, "attendance"), {
-          name: bestMatch.label,
-          time: new Date().toISOString(),
-        });
-        alert(`تم تسجيل حضور: ${bestMatch.label}`);
-      } else {
-        alert("الوجه غير مسجل!");
-      }
-    }
+if (detection) {
+  const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+  const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+  if (bestMatch.label !== "unknown") {
+    await addDoc(collection(db, "attendance"), {
+      name: bestMatch.label,
+      time: new Date().toISOString(),
+    });
+    alert(`تم تسجيل حضور: ${bestMatch.label}`);
+  } else {
+    alert("الوجه غير مسجل!");
+  }
+}
+
   }};
 
   return (
