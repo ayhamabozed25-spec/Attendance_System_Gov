@@ -46,10 +46,13 @@ function App() {
     >
     
 <h1 style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "#2c3e50" }} >
-  📌 نظام تسجيل الحضور بالوجه
-</h1>
 
 <img src={logo} alt="Logo" style={{ width: "50px", height: "50px", marginRight: "10px" }} />
+
+📌 نظام تسجيل الحضور بالوجه
+</h1>
+
+
 
       {!user ? (
         <>
