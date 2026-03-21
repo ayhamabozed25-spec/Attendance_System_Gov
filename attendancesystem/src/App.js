@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import Register from "./Register";
 import Attendance from "./Attendance";
 import { auth } from "./firebaseConfig";
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 
 function App() {
   const [activePage, setActivePage] = useState(null);
@@ -15,13 +20,13 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const login = async () => {
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
     try {
-      // هنا ضع البريد وكلمة المرور المسموح بها
-      await signInWithEmailAndPassword(auth, "alloweduser@example.com", "password123");
+      await signInWithPopup(auth, provider);
     } catch (error) {
       console.error(error);
-      alert("فشل تسجيل الدخول");
+      alert("فشل تسجيل الدخول عبر Google");
     }
   };
 
@@ -35,8 +40,8 @@ function App() {
 
       {!user ? (
         <>
-          <p>الرجاء تسجيل الدخول</p>
-          <button onClick={login}>تسجيل دخول</button>
+          <p>الرجاء تسجيل الدخول عبر Google</p>
+          <button onClick={loginWithGoogle}>تسجيل دخول</button>
         </>
       ) : (
         <>
@@ -52,7 +57,8 @@ function App() {
           <button onClick={() => setActivePage("attendance")}>تسجيل حضور</button>
 
           {/* عرض المكونات حسب الزر المضغوط */}
-          {activePage === "register" && user.email === "alloweduser@example.com" && <Register />}
+          {activePage === "register" &&
+            user.email === "alloweduser@example.com" && <Register />}
           {activePage === "attendance" && <Attendance />}
         </>
       )}
