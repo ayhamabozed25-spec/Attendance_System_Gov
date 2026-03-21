@@ -17,14 +17,28 @@ useEffect(() => {
 }, []);
 
 
-  const loadModels = async () => {
+const loadModels = async () => {
+  try {
+    // حاول التحميل من IndexedDB أولاً
+    await faceapi.nets.ssdMobilenetv1.load('indexeddb://ssd');
+    await faceapi.nets.faceLandmark68Net.load('indexeddb://landmark');
+    await faceapi.nets.faceRecognitionNet.load('indexeddb://recognition');
+    console.log("Models loaded from IndexedDB");
+  } catch (error) {
+    // إذا لم توجد النماذج محليًا، حمّلها من السيرفر واحفظها
     const MODEL_URL = process.env.PUBLIC_URL + "/models";
     await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-    setModelsLoaded(true);
-    console.log("Models loaded successfully");
-  };
+    console.log("Models loaded from URI, saving to IndexedDB...");
+    await faceapi.nets.ssdMobilenetv1.save('indexeddb://ssd');
+    await faceapi.nets.faceLandmark68Net.save('indexeddb://landmark');
+    await faceapi.nets.faceRecognitionNet.save('indexeddb://recognition');
+    console.log("Models loaded from server");
+  }
+  setModelsLoaded(true);
+};
+
 
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
