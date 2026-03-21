@@ -40,7 +40,7 @@ function Attendance() {
              .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
              .withFaceLandmarks()
              .withFaceDescriptor();
-
+       if (detection) {
           const resizedDetections = faceapi.resizeResults(detection, displaySize);
           const context = canvasat.getContext("2d");
           context.clearRect(0, 0, canvasat.width, canvasat.height);
@@ -50,7 +50,7 @@ function Attendance() {
           // رسم العلامات (العينين، الأنف، إلخ)
           faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
         }
-      }, 100);
+      }}, 100);
     };
   };
 
