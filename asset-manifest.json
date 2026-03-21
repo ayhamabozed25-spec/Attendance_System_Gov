@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/Attendance_System_Gov/static/css/main.e6c13ad2.css",
-    "main.js": "/Attendance_System_Gov/static/js/main.63d7de85.js",
+    "main.js": "/Attendance_System_Gov/static/js/main.c79f75d7.js",
     "static/js/453.52da5579.chunk.js": "/Attendance_System_Gov/static/js/453.52da5579.chunk.js",
     "index.html": "/Attendance_System_Gov/index.html",
     "main.e6c13ad2.css.map": "/Attendance_System_Gov/static/css/main.e6c13ad2.css.map",
-    "main.63d7de85.js.map": "/Attendance_System_Gov/static/js/main.63d7de85.js.map",
+    "main.c79f75d7.js.map": "/Attendance_System_Gov/static/js/main.c79f75d7.js.map",
     "453.52da5579.chunk.js.map": "/Attendance_System_Gov/static/js/453.52da5579.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.63d7de85.js"
+    "static/js/main.c79f75d7.js"
   ]
 }
