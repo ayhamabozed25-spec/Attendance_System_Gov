@@ -29,37 +29,44 @@ function Attendance() {
     }
   };
 
-  const startCamera = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    videoRef.current.srcObject = stream;
+ const startCamera = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  videoRef.current.srcObject = stream;
 
-    videoRef.current.onplaying = () => {
-      const canvasat = document.getElementById("overlayat");
-      const displaySize = {
-        width: videoRef.current.videoWidth,
-        height: videoRef.current.videoHeight,
-      };
-      faceapi.matchDimensions(canvasat, displaySize);
-
-      setInterval(async () => {
-        if (modelsLoaded) {
-          const detections = await faceapi
-            .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
-            .withFaceLandmarks()
-            .withFaceDescriptors();
-
-          const context = canvasat.getContext("2d");
-          context.clearRect(0, 0, canvasat.width, canvasat.height);
-
-          if (detections.length > 0) {
-            const resizedDetections = faceapi.resizeResults(detections, displaySize);
-            faceapi.draw.drawDetections(canvasat, resizedDetections);
-            faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
-          }
-        }
-      }, 100);
+  videoRef.current.onplaying = () => {
+    const canvasat = document.getElementById("overlayat");
+    const displaySize = {
+      width: videoRef.current.videoWidth,
+      height: videoRef.current.videoHeight,
     };
+    faceapi.matchDimensions(canvasat, displaySize);
+
+    const renderLoop = async () => {
+      if (modelsLoaded) {
+        const detections = await faceapi
+          .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+          .withFaceLandmarks()
+          .withFaceDescriptors();
+
+        const context = canvasat.getContext("2d");
+        context.clearRect(0, 0, canvasat.width, canvasat.height);
+
+        if (detections.length > 0) {
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+          faceapi.draw.drawDetections(canvasat, resizedDetections);
+          faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+        }
+      }
+
+      // استدعاء الحلقة التالية بشكل متزامن مع معدل تحديث الشاشة
+      requestAnimationFrame(renderLoop);
+    };
+
+    // بدء الحلقة
+    renderLoop();
   };
+};
+
 
   // تحميل بيانات المستخدم الحالي فقط
   const loadCurrentUser = async () => {
