@@ -37,7 +37,7 @@ function Attendance() {
       setInterval(async () => {
         if (modelsLoaded) {
           const detections = await faceapi
-            .detectSingleFace(videoRef.current)
+            .detectAllFaces(videoRef.current)
             .withFaceLandmarks()
             .withFaceDescriptors();
 
@@ -68,7 +68,7 @@ function Attendance() {
 
   const recognizeFace = async () => {
     const detections = await faceapi
-      .detectSingleFace(videoRef.current)
+      .detectAllFaces(videoRef.current)
       .withFaceLandmarks()
       .withFaceDescriptor();
     if (detections.length > 0) {
