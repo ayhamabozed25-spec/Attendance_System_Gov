@@ -55,7 +55,7 @@ function Register() {
   };
 
  
-const captureFace = async (videoRef, modelsLoaded, name) => {
+const captureFace = async () => {
   if (!modelsLoaded) {
     alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
     return;
@@ -67,6 +67,10 @@ const captureFace = async (videoRef, modelsLoaded, name) => {
   }
 
   const user = auth.currentUser;
+  if (!user || !user.email) {
+    alert("لم يتم العثور على مستخدم مسجّل دخول!");
+    return;
+  }
 
   const detections = await faceapi
     .detectAllFaces(videoRef.current)
@@ -74,7 +78,6 @@ const captureFace = async (videoRef, modelsLoaded, name) => {
     .withFaceDescriptors();
 
   if (detections.length > 0) {
-    // حفظ أول وجه فقط عند الضغط على زر التسجيل
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       name,
@@ -85,6 +88,7 @@ const captureFace = async (videoRef, modelsLoaded, name) => {
     alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
   }
 };
+
 
   return (
     <div>
