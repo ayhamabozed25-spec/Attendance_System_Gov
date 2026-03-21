@@ -10,7 +10,7 @@ function Attendance() {
   const [statusMessage, setStatusMessage] = useState("");
 
   // موقع المنشأة (ثابت)
-  const facilityLocation = { lat: 35.867128, lng: 36.571545 };
+  const facilityLocation = { lat: 35.843374, lng:  36.580194 };
 
   useEffect(() => {
     const init = async () => {
