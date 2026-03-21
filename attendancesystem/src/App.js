@@ -58,7 +58,7 @@ function App() {
 
           {/* عرض المكونات حسب الزر المضغوط */}
           {activePage === "register" &&
-            user.email === "alloweduser@example.com" && <Register />}
+            user.email === "abozedayham@gmail.com" && <Register />}
           {activePage === "attendance" && <Attendance />}
         </>
       )}
