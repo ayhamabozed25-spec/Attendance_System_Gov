@@ -7,6 +7,7 @@ function Attendance() {
   const videoRef = useRef();
   const labeledDescriptorsRef = useRef([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(""); // شريط الحالة
 
   useEffect(() => {
     const init = async () => {
@@ -22,57 +23,54 @@ function Attendance() {
       await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
       await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
       await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-      console.log("Models loaded");
+      setStatusMessage("✅ النماذج تم تحميلها بنجاح");
       setModelsLoaded(true);
     } catch (error) {
+      setStatusMessage("❌ خطأ في تحميل النماذج");
       console.log(error);
     }
   };
 
- const startCamera = async () => {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  videoRef.current.srcObject = stream;
+  const startCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    videoRef.current.srcObject = stream;
+    setStatusMessage("🎥 الكاميرا تعمل الآن");
 
-  videoRef.current.onplaying = () => {
-    const canvasat = document.getElementById("overlayat");
-    const displaySize = {
-      width: videoRef.current.videoWidth,
-      height: videoRef.current.videoHeight,
-    };
-    faceapi.matchDimensions(canvasat, displaySize);
+    videoRef.current.onplaying = () => {
+      const canvasat = document.getElementById("overlayat");
+      const displaySize = {
+        width: videoRef.current.videoWidth,
+        height: videoRef.current.videoHeight,
+      };
+      faceapi.matchDimensions(canvasat, displaySize);
 
-    const renderLoop = async () => {
-      if (modelsLoaded) {
-        const detections = await faceapi
-          .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
-          .withFaceLandmarks()
-          .withFaceDescriptors();
+      const renderLoop = async () => {
+        if (modelsLoaded) {
+          const detections = await faceapi
+            .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptors();
 
-        const context = canvasat.getContext("2d");
-        context.clearRect(0, 0, canvasat.width, canvasat.height);
+          const context = canvasat.getContext("2d");
+          context.clearRect(0, 0, canvasat.width, canvasat.height);
 
-        if (detections.length > 0) {
-          const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          faceapi.draw.drawDetections(canvasat, resizedDetections);
-          faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+          if (detections.length > 0) {
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            faceapi.draw.drawDetections(canvasat, resizedDetections);
+            faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+          }
         }
-      }
+        requestAnimationFrame(renderLoop);
+      };
 
-      // استدعاء الحلقة التالية بشكل متزامن مع معدل تحديث الشاشة
-      requestAnimationFrame(renderLoop);
+      renderLoop();
     };
-
-    // بدء الحلقة
-    renderLoop();
   };
-};
 
-
-  // تحميل بيانات المستخدم الحالي فقط
   const loadCurrentUser = async () => {
     const user = auth.currentUser;
     if (!user) {
-      alert("لم يتم تسجيل الدخول!");
+      setStatusMessage("⚠️ لم يتم تسجيل الدخول!");
       return;
     }
 
@@ -85,59 +83,68 @@ function Attendance() {
           [new Float32Array(data.descriptor)]
         ),
       ];
-      console.log("Loaded current user data:", data);
+      setStatusMessage(`✅ تم تحميل بيانات المستخدم: ${data.name}`);
     } else {
-      alert("لا يوجد بيانات وجه مسجلة لهذا المستخدم!");
+      setStatusMessage("❌ لا يوجد بيانات وجه مسجلة لهذا المستخدم!");
     }
   };
 
-const recognizeFace = async () => {
-  if (!modelsLoaded) return;
+  const recognizeFace = async () => {
+    if (!modelsLoaded) {
+      setStatusMessage("⚠️ النماذج لم تُحمَّل بعد!");
+      return;
+    }
 
-  const detection = await faceapi
-    .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
-    .withFaceLandmarks()
-    .withFaceDescriptor();
+    const detection = await faceapi
+      .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
 
-  if (!detection) {
-    alert("لم يتم العثور على أي وجه!");
-    return;
-  }
+    if (!detection) {
+      setStatusMessage("❌ لم يتم العثور على أي وجه!");
+      return;
+    }
 
-  if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
-    alert("لم يتم تحميل بيانات المستخدم الحالي!");
-    return;
-  }
+    if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+      setStatusMessage("⚠️ لم يتم تحميل بيانات المستخدم الحالي!");
+      return;
+    }
 
-  const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
-  const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+    const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
 
-  if (bestMatch.label !== "unknown") {
-    const user = auth.currentUser;
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const data = userDoc.data();
+    if (bestMatch.label !== "unknown") {
+      const user = auth.currentUser;
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const data = userDoc.data();
 
-    await addDoc(collection(db, "attendance"), {
-      email: user.email,
-      name: data.name,
-      time: new Date().toISOString(),
-    });
+      await addDoc(collection(db, "attendance"), {
+        email: user.email,
+        name: data.name,
+        time: new Date().toISOString(),
+      });
 
-    alert(`تم تسجيل حضور: ${data.name} (${user.email})`);
-  } else {
-    alert("وجه غير مسجل لهذا المستخدم!");
-  }
-};
-
+      setStatusMessage(`✅ تم تسجيل حضور: ${data.name} (${user.email})`);
+    } else {
+      setStatusMessage("❌ وجه غير مسجل لهذا المستخدم!");
+    }
+  };
 
   return (
-    <div>
-      <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+    <div style={{ textAlign: "center", fontFamily: "Arial, sans-serif", marginTop: "20px" }}>
+      <h2 style={{ color: "#2c3e50" }}>📌 نظام تسجيل الحضور</h2>
+
+      <div style={{ position: "relative", width: "100%", maxWidth: "500px", margin: "20px auto" }}>
         <video
           ref={videoRef}
           autoPlay
           playsInline
-          style={{ width: "100%", height: "auto" }}
+          style={{
+            width: "100%",
+            height: "auto",
+            borderRadius: "10px",
+            border: "2px solid #3498db",
+          }}
           onLoadedMetadata={() => {
             const canvas = document.getElementById("overlayat");
             if (videoRef.current) {
@@ -158,22 +165,56 @@ const recognizeFace = async () => {
         ></canvas>
       </div>
 
-      <button onClick={startCamera}>تشغيل الكاميرا</button>
-      <button
-        onClick={() => {
-          if (!modelsLoaded) {
-            alert("النماذج لم تُحمَّل بعد!");
-            return;
-          }
-          if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
-            alert("لم يتم تحميل بيانات المستخدم الحالي!");
-            return;
-          }
-          recognizeFace();
+      <div style={{ marginTop: "20px" }}>
+        <button
+          onClick={startCamera}
+          style={{
+            backgroundColor: "#27ae60",
+            color: "white",
+            padding: "10px 20px",
+            margin: "10px",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "16px",
+          }}
+        >
+          🎥 تشغيل الكاميرا
+        </button>
+
+        <button
+          onClick={recognizeFace}
+          style={{
+            backgroundColor: "#2980b9",
+            color: "white",
+            padding: "10px 20px",
+            margin: "10px",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "16px",
+          }}
+        >
+          ✅ تسجيل حضور
+        </button>
+      </div>
+
+      {/* شريط الحالة */}
+      <div
+        style={{
+          marginTop: "30px",
+          padding: "10px",
+          backgroundColor: "#ecf0f1",
+          borderRadius: "5px",
+          border: "1px solid #bdc3c7",
+          maxWidth: "500px",
+          margin: "20px auto",
+          fontSize: "15px",
+          color: "#2c3e50",
         }}
       >
-        تسجيل حضور
-      </button>
+        {statusMessage || "ℹ️ لا توجد رسائل حالياً"}
+      </div>
     </div>
   );
 }
