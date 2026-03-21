@@ -7,7 +7,10 @@ function Attendance() {
   const videoRef = useRef();
   const labeledDescriptorsRef = useRef([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
-  const [statusMessage, setStatusMessage] = useState(""); // شريط الحالة
+  const [statusMessage, setStatusMessage] = useState("");
+
+  // موقع المنشأة (ثابت)
+  const facilityLocation = { lat: 35.867128, lng: 36.571545 };
 
   useEffect(() => {
     const init = async () => {
@@ -27,7 +30,6 @@ function Attendance() {
       setModelsLoaded(true);
     } catch (error) {
       setStatusMessage("❌ خطأ في تحميل النماذج");
-      console.log(error);
     }
   };
 
@@ -46,18 +48,18 @@ function Attendance() {
 
       const renderLoop = async () => {
         if (modelsLoaded) {
-          const detections = await faceapi
-            .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+          const detection = await faceapi
+            .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
             .withFaceLandmarks()
-            .withFaceDescriptors();
+            .withFaceDescriptor();
 
           const context = canvasat.getContext("2d");
           context.clearRect(0, 0, canvasat.width, canvasat.height);
 
-          if (detections.length > 0) {
-            const resizedDetections = faceapi.resizeResults(detections, displaySize);
-            faceapi.draw.drawDetections(canvasat, resizedDetections);
-            faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+          if (detection) {
+            const resizedDetection = faceapi.resizeResults(detection, displaySize);
+            faceapi.draw.drawDetections(canvasat, resizedDetection);
+            faceapi.draw.drawFaceLandmarks(canvasat, resizedDetection);
           }
         }
         requestAnimationFrame(renderLoop);
@@ -89,6 +91,22 @@ function Attendance() {
     }
   };
 
+  // دالة حساب المسافة بين نقطتين (Haversine)
+  const getDistanceInMeters = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000; // نصف قطر الأرض بالمتر
+    const toRad = (value) => (value * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   const recognizeFace = async () => {
     if (!modelsLoaded) {
       setStatusMessage("⚠️ النماذج لم تُحمَّل بعد!");
@@ -114,17 +132,30 @@ function Attendance() {
     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
 
     if (bestMatch.label !== "unknown") {
-      const user = auth.currentUser;
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const data = userDoc.data();
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const distance = getDistanceInMeters(
+          facilityLocation.lat,
+          facilityLocation.lng,
+          position.coords.latitude,
+          position.coords.longitude
+        );
 
-      await addDoc(collection(db, "attendance"), {
-        email: user.email,
-        name: data.name,
-        time: new Date().toISOString(),
+        if (distance <= 100) {
+          const user = auth.currentUser;
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          const data = userDoc.data();
+
+          await addDoc(collection(db, "attendance"), {
+            email: user.email,
+            name: data.name,
+            time: new Date().toISOString(),
+          });
+
+          setStatusMessage(`✅ تم تسجيل حضور: ${data.name} (${user.email})`);
+        } else {
+          setStatusMessage("❌ أنت بعيد عن موقع المنشأة (أكثر من 100 متر)");
+        }
       });
-
-      setStatusMessage(`✅ تم تسجيل حضور: ${data.name} (${user.email})`);
     } else {
       setStatusMessage("❌ وجه غير مسجل لهذا المستخدم!");
     }
@@ -144,13 +175,6 @@ function Attendance() {
             height: "auto",
             borderRadius: "10px",
             border: "2px solid #3498db",
-          }}
-          onLoadedMetadata={() => {
-            const canvas = document.getElementById("overlayat");
-            if (videoRef.current) {
-              canvas.width = videoRef.current.videoWidth;
-              canvas.height = videoRef.current.videoHeight;
-            }
           }}
         ></video>
         <canvas
