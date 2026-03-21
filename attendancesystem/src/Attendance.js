@@ -71,7 +71,7 @@ function Attendance() {
       .detectSingleFace(videoRef.current)
       .withFaceLandmarks()
       .withFaceDescriptor();
-    if (detections) {
+    if (detections.length > 0) {
       const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detections.descriptor);
       if (bestMatch.label !== "unknown") {
