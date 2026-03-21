@@ -69,9 +69,9 @@ function Attendance() {
   const recognizeFace = async () => {
 
     const detections = await faceapi
-  .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
+  .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
   .withFaceLandmarks()
-  .withFaceDescriptor();
+  .withFaceDescriptors();
 
 if (detections) {
     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
