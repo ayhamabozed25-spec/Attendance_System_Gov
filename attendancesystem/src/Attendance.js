@@ -84,6 +84,7 @@ if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0
   alert("لا يوجد بيانات وجوه مسجلة في قاعدة البيانات!");
   return;
 }
+         console.log(labeledDescriptorsRef.current );
 const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
         
         for (const d of detections) {
