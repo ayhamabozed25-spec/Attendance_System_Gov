@@ -34,7 +34,7 @@ const loadModels = async () => {
     await faceapi.nets.ssdMobilenetv1.save('indexeddb://ssd');
     await faceapi.nets.faceLandmark68Net.save('indexeddb://landmark');
     await faceapi.nets.faceRecognitionNet.save('indexeddb://recognition');
-    console.log("Models loaded from server");
+    console.log("Models Saved");
   }
   setModelsLoaded(true);
 };
