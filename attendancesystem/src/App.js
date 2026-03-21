@@ -9,6 +9,8 @@ import {
   signOut,
 } from "firebase/auth";
 
+import logo from "./logo.webp";
+
 function App() {
   const [activePage, setActivePage] = useState(null);
   const [user, setUser] = useState(null);
@@ -47,11 +49,7 @@ function App() {
   📌 نظام تسجيل الحضور بالوجه
 </h1>
 
-  <img 
-    src="/Icon.webp" 
-    alt="Logo" 
-    style={{ width: "50px", height: "50px", marginRight: "10px" }} 
-  />
+<img src={logo} alt="Logo" style={{ width: "50px", height: "50px", marginRight: "10px" }} />
 
       {!user ? (
         <>
