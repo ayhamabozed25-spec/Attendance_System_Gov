@@ -93,7 +93,7 @@ const captureFace = async (videoRef, modelsLoaded, name) => {
         placeholder="أدخل اسمك"
         onChange={(e) => setName(e.target.value)}
       />
-      <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: "600px" }}>
       <video
         ref={videoRef}
         autoPlay
