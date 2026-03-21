@@ -64,6 +64,7 @@ useEffect(() => {
       const querySnapshot = await getDocs(collection(db, "users"));
       labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
         const data = doc.data();
+        console.log("Loaded user:", data);
         return new faceapi.LabeledFaceDescriptors(
           data.name,
           [new Float32Array(data.descriptor)]
@@ -117,7 +118,18 @@ const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
       </div>
 
       <button onClick={startCamera}>تشغيل الكاميرا</button>
-      <button onClick={recognizeFace}>تسجيل حضور</button>
+     <button onClick={() => {
+  if (!modelsLoaded) {
+    alert("النماذج لم تُحمَّل بعد!");
+    return;
+  }
+  if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+    alert("لم يتم تحميل بيانات المستخدمين بعد!");
+    return;
+  }
+  recognizeFace();
+}}>تسجيل حضور</button>
+
     </div>
   );
 }
