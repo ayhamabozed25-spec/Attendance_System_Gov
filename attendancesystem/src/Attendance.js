@@ -39,8 +39,8 @@ const loadModels = async () => {
     videoRef.current.onplaying = () => {
       const canvasat = document.getElementById("overlayat");
       const displaySize = {
-        width: videoRef.current.width,
-        height: videoRef.current.height,
+        width: videoRef.current.videoWidth,
+        height: videoRef.current.videoHeight,
       };
       faceapi.matchDimensions(canvasat, displaySize);
 
@@ -52,6 +52,7 @@ const loadModels = async () => {
             .withFaceDescriptors();
 
           if (detections.length > 0) {
+            
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
             const context = canvasat.getContext("2d");
             context.clearRect(0, 0, canvasat.width, canvasat.height);
