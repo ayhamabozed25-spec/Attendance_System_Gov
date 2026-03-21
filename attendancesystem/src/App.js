@@ -42,7 +42,17 @@ function App() {
         marginTop: "30px",
       }}
     >
-      <h1 style={{ color: "#2c3e50" }}>📌 نظام تسجيل الحضور بالوجه</h1>
+    
+<h1 style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "#2c3e50"}}>
+  <img 
+    src="/Icon.webp" 
+    alt="Logo" 
+    style={{ width: "50px", height: "50px", marginRight: "10px" }} 
+  />
+  📌 نظام تسجيل الحضور بالوجه
+</h1>
+
+
 
       {!user ? (
         <>
