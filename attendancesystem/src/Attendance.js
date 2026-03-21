@@ -1,36 +1,33 @@
 import React, { useRef, useEffect, useState } from "react";
 import * as faceapi from "face-api.js";
-import { db } from "./firebaseConfig";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import { db, auth } from "./firebaseConfig";
+import { doc, getDoc, addDoc, collection } from "firebase/firestore";
 
 function Attendance() {
   const videoRef = useRef();
   const labeledDescriptorsRef = useRef([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
 
-useEffect(() => {
-  const init = async () => {
-    await loadModels();
-    await loadUsers();
+  useEffect(() => {
+    const init = async () => {
+      await loadModels();
+      await loadCurrentUser();
+    };
+    init();
+  }, []);
+
+  const loadModels = async () => {
+    try {
+      const MODEL_URL = process.env.PUBLIC_URL + "/models";
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      console.log("Models loaded");
+      setModelsLoaded(true);
+    } catch (error) {
+      console.log(error);
+    }
   };
-  init();
-}, []);
-
-
-const loadModels = async () => {
-  try {
-    const MODEL_URL = process.env.PUBLIC_URL + "/models";
-    await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-    console.log("Models loaded");
-  } catch (error) {
-  
-    console.log(error);
-  }
-  setModelsLoaded(true);
-};
-
 
   const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -50,14 +47,12 @@ const loadModels = async () => {
             .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
             .withFaceLandmarks()
             .withFaceDescriptors();
-          
-        const context = canvasat.getContext("2d");
-        context.clearRect(0, 0, canvasat.width, canvasat.height);
-          
+
+          const context = canvasat.getContext("2d");
+          context.clearRect(0, 0, canvasat.width, canvasat.height);
+
           if (detections.length > 0) {
-            
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
-            
             faceapi.draw.drawDetections(canvasat, resizedDetections);
             faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
           }
@@ -66,16 +61,27 @@ const loadModels = async () => {
     };
   };
 
-  const loadUsers = async () => {
-    
-      const querySnapshot = await getDocs(collection(db, "users"));
-      labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return new faceapi.LabeledFaceDescriptors(
+  // تحميل بيانات المستخدم الحالي فقط
+  const loadCurrentUser = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("لم يتم تسجيل الدخول!");
+      return;
+    }
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      labeledDescriptorsRef.current = [
+        new faceapi.LabeledFaceDescriptors(
           data.name,
           [new Float32Array(data.descriptor)]
-        );
-      });
+        ),
+      ];
+      console.log("Loaded current user data:", data);
+    } else {
+      alert("لا يوجد بيانات وجه مسجلة لهذا المستخدم!");
+    }
   };
 
   const recognizeFace = async () => {
@@ -86,23 +92,25 @@ const loadModels = async () => {
         .withFaceDescriptors();
 
       if (detections.length > 0) {
-if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
-  alert("لا يوجد بيانات وجوه مسجلة في قاعدة البيانات!");
-  return;
-}
-         console.log(labeledDescriptorsRef.current );
-const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
-        
+        if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+          alert("لم يتم تحميل بيانات المستخدم الحالي!");
+          return;
+        }
+
+        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+
         for (const d of detections) {
           const bestMatch = faceMatcher.findBestMatch(d.descriptor);
           if (bestMatch.label !== "unknown") {
+            const user = auth.currentUser;
             await addDoc(collection(db, "attendance"), {
+              email: user.email,
               name: bestMatch.label,
               time: new Date().toISOString(),
             });
-            alert(`تم تسجيل حضور: ${bestMatch.label}`);
+            alert(`تم تسجيل حضور: ${bestMatch.label} (${user.email})`);
           } else {
-            alert("وجه غير مسجل!");
+            alert("وجه غير مسجل لهذا المستخدم!");
           }
         }
       } else {
@@ -111,56 +119,52 @@ const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
     }
   };
 
-return (
-  <div>
-    <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        style={{ width: "100%", height: "auto" }}
-        onLoadedMetadata={() => {
-          const canvas = document.getElementById("overlayat");
-          if (videoRef.current) {
-            canvas.width = videoRef.current.videoWidth;
-            canvas.height = videoRef.current.videoHeight;
+  return (
+    <div>
+      <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          style={{ width: "100%", height: "auto" }}
+          onLoadedMetadata={() => {
+            const canvas = document.getElementById("overlayat");
+            if (videoRef.current) {
+              canvas.width = videoRef.current.videoWidth;
+              canvas.height = videoRef.current.videoHeight;
+            }
+          }}
+        ></video>
+        <canvas
+          id="overlayat"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+          }}
+        ></canvas>
+      </div>
+
+      <button onClick={startCamera}>تشغيل الكاميرا</button>
+      <button
+        onClick={() => {
+          if (!modelsLoaded) {
+            alert("النماذج لم تُحمَّل بعد!");
+            return;
           }
+          if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+            alert("لم يتم تحميل بيانات المستخدم الحالي!");
+            return;
+          }
+          recognizeFace();
         }}
-      ></video>
-      <canvas
-        id="overlayat"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%"
-        }}
-      ></canvas>
+      >
+        تسجيل حضور
+      </button>
     </div>
-
-    <button onClick={startCamera}>تشغيل الكاميرا</button>
-    <button
-      onClick={() => {
-        if (!modelsLoaded) {
-          alert("النماذج لم تُحمَّل بعد!");
-          return;
-        }
-        if (
-          !labeledDescriptorsRef.current ||
-          labeledDescriptorsRef.current.length === 0
-        ) {
-          alert("لم يتم تحميل بيانات المستخدمين بعد!");
-          return;
-        }
-        recognizeFace();
-      }}
-    >
-      تسجيل حضور
-    </button>
-  </div>
-);
-
+  );
 }
 
 export default Attendance;
