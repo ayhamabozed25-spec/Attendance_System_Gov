@@ -28,8 +28,8 @@ function Register() {
     videoRef.current.onplaying = () => {
       const canvas = document.getElementById("overlay");
       const displaySize = {
-        width: videoRef.current.width,
-        height: videoRef.current.height,
+        width: videoRef.current.videoWidth,
+        height: videoRef.current.videoHeight,
       };
       faceapi.matchDimensions(canvas, displaySize);
 
@@ -40,12 +40,15 @@ function Register() {
             .withFaceLandmarks()
             .withFaceDescriptors();
 
-          const resizedDetections = faceapi.resizeResults(detections, displaySize);
           const context = canvas.getContext("2d");
           context.clearRect(0, 0, canvas.width, canvas.height);
 
+           if (detections.length > 0) {
+          const resizedDetections = faceapi.resizeResults(detections, displaySize);
+      
           faceapi.draw.drawDetections(canvas, resizedDetections);
           faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+           }
         }
       }, 100); // يحدث كل 100ms للرسم فقط
     };
@@ -86,15 +89,31 @@ function Register() {
         placeholder="أدخل اسمك"
         onChange={(e) => setName(e.target.value)}
       />
-      <div style={{ position: "relative", width: "400px", height: "300px" }}>
-        <video ref={videoRef} autoPlay width="400" height="300"></video>
-        <canvas
-          id="overlay"
-          width="400"
-          height="300"
-          style={{ position: "absolute", top: 0, left: 0 }}
-        ></canvas>
-      </div>
+      <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        style={{ width: "100%", height: "auto" }}
+        onLoadedMetadata={() => {
+          const canvas = document.getElementById("overlay");
+          if (videoRef.current) {
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+          }
+        }}
+      ></video>
+      <canvas
+        id="overlay"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%"
+        }}
+      ></canvas>
+    </div>
       <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={captureFace}>تسجيل</button>
     </div>
