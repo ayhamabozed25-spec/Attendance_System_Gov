@@ -73,7 +73,7 @@ if (modelsLoaded) {
   .withFaceLandmarks()
   .withFaceDescriptors();
 
-if (detections) {
+if (detections.length > 0) {
     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detections.descriptor);
       if (bestMatch.label !== "unknown") {
