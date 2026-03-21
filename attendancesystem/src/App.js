@@ -26,7 +26,7 @@ function App() {
       await signInWithPopup(auth, provider);
     } catch (error) {
       console.error(error);
-      alert("فشل تسجيل الدخول عبر Google");
+      alert("❌ فشل تسجيل الدخول عبر Google");
     }
   };
 
@@ -35,30 +35,96 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>نظام تسجيل الحضور بالوجه</h1>
+    <div
+      style={{
+        textAlign: "center",
+        fontFamily: "Arial, sans-serif",
+        marginTop: "30px",
+      }}
+    >
+      <h1 style={{ color: "#2c3e50" }}>📌 نظام تسجيل الحضور بالوجه</h1>
 
       {!user ? (
         <>
-          <p>الرجاء تسجيل الدخول عبر Google</p>
-          <button onClick={loginWithGoogle}>تسجيل دخول</button>
+          <p style={{ fontSize: "18px", color: "#7f8c8d" }}>
+            الرجاء تسجيل الدخول عبر Google
+          </p>
+          <button
+            onClick={loginWithGoogle}
+            style={{
+              backgroundColor: "#e74c3c",
+              color: "white",
+              padding: "10px 20px",
+              margin: "10px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+          >
+            🔑 تسجيل دخول
+          </button>
         </>
       ) : (
         <>
-          <p>مرحباً {user.email}</p>
-          <button onClick={logout}>تسجيل خروج</button>
+          <p style={{ fontSize: "18px", color: "#27ae60" }}>
+            مرحباً {user.email}
+          </p>
+          <button
+            onClick={logout}
+            style={{
+              backgroundColor: "#c0392b",
+              color: "white",
+              padding: "10px 20px",
+              margin: "10px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+          >
+            🚪 تسجيل خروج
+          </button>
 
           {user.email === "abozedayham@gmail.com" && (
-            <button onClick={() => setActivePage("register")}>تسجيل جديد</button>
+            <button
+              onClick={() => setActivePage("register")}
+              style={{
+                backgroundColor: "#2980b9",
+                color: "white",
+                padding: "10px 20px",
+                margin: "10px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                fontSize: "16px",
+              }}
+            >
+              📝 تسجيل جديد
+            </button>
           )}
 
-         
-          <button onClick={() => setActivePage("attendance")}>تسجيل حضور</button>
+          <button
+            onClick={() => setActivePage("attendance")}
+            style={{
+              backgroundColor: "#27ae60",
+              color: "white",
+              padding: "10px 20px",
+              margin: "10px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+          >
+            ✅ تسجيل حضور
+          </button>
 
-        
-          {activePage === "register" &&
-            user.email === "abozedayham@gmail.com" && <Register />}
-          {activePage === "attendance" && <Attendance />}
+          <div style={{ marginTop: "30px" }}>
+            {activePage === "register" &&
+              user.email === "abozedayham@gmail.com" && <Register />}
+            {activePage === "attendance" && <Attendance />}
+          </div>
         </>
       )}
     </div>
