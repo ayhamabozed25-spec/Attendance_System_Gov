@@ -50,14 +50,14 @@ const loadModels = async () => {
             .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
             .withFaceLandmarks()
             .withFaceDescriptors();
-
+          
+        const context = canvasat.getContext("2d");
+        context.clearRect(0, 0, canvasat.width, canvasat.height);
+          
           if (detections.length > 0) {
             
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
-            const context = canvasat.getContext("2d");
-            context.clearRect(0, 0, canvasat.width, canvasat.height);
-
-            // رسم المستطيلات والعلامات لكل وجه
+            
             faceapi.draw.drawDetections(canvasat, resizedDetections);
             faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
           }
