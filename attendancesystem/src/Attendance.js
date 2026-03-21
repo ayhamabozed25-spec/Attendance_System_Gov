@@ -163,7 +163,7 @@ function Attendance() {
 
   return (
     <div style={{ textAlign: "center", fontFamily: "Arial, sans-serif", marginTop: "20px" }}>
-      <h2 style={{ color: "#2c3e50" }}>📌 نظام تسجيل الحضور</h2>
+      
 
       <div style={{ position: "relative", width: "100%", maxWidth: "500px", margin: "20px auto" }}>
         <video
