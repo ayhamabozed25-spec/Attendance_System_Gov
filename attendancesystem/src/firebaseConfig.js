@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 // إعدادات مشروعك من Firebase Console
 const firebaseConfig = {
@@ -22,4 +23,5 @@ const db = getFirestore(app);
 // Storage لتخزين الصور
 const storage = getStorage(app);
 
+export const auth = getAuth(app);
 export { db, storage };
