@@ -45,7 +45,7 @@ function App() {
     
 <h1 style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "#2c3e50"}}>
   <img 
-    src="/Icon.webp" 
+    src="%PUBLIC_URL%/Icon.webp" 
     alt="Logo" 
     style={{ width: "50px", height: "50px", marginRight: "10px" }} 
   />
