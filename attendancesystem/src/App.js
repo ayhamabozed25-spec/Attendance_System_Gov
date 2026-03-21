@@ -45,14 +45,26 @@ function App() {
       }}
     >
     
-<h1 style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "#2c3e50" }} >
-
-<img src={logo} alt="Logo" style={{ width: "50px", height: "50px", marginRight: "10px" }} />
-
-📌 نظام تسجيل الحضور بالوجه
+<h1
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#2c3e50",
+    fontSize: "clamp(1.2rem, 2.5vw, 2rem)", // حجم النص يتغير حسب الشاشة
+    gap: "10px", // مسافة بين الصورة والنص
+  }}
+>
+  <img
+    src={logo}
+    alt="Logo"
+    style={{
+      width: "clamp(30px, 6vw, 60px)", // حجم اللوغو يتغير حسب الشاشة
+      height: "auto",
+    }}
+  />
+  📌 نظام تسجيل الحضور بالوجه
 </h1>
-
-
 
       {!user ? (
         <>
