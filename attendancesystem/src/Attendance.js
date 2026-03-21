@@ -14,7 +14,7 @@ function Attendance() {
   }, []);
 
   const loadModels = async () => {
-    const MODEL_URL = process.env.PUBLIC_URL + "/models";
+    const MODEL_URL = "/models";
     await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
@@ -67,12 +67,14 @@ function Attendance() {
   };
 
   const recognizeFace = async () => {
+
     const detections = await faceapi
-      .detectAllFaces(videoRef.current)
-      .withFaceLandmarks()
-      .withFaceDescriptor();
-    if (detections.length > 0) {
-      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+  .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
+  .withFaceLandmarks()
+  .withFaceDescriptor();
+
+if (detections) {
+    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
       const bestMatch = faceMatcher.findBestMatch(detections.descriptor);
       if (bestMatch.label !== "unknown") {
         await addDoc(collection(db, "attendance"), {
