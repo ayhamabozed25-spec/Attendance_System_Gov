@@ -8,10 +8,14 @@ function Attendance() {
   const labeledDescriptorsRef = useRef([]);
   const [modelsLoaded, setModelsLoaded] = useState(false);
 
-  useEffect(() => {
-    loadModels();
-    loadUsers();
-  }, []);
+useEffect(() => {
+  const init = async () => {
+    await loadModels();
+    await loadUsers();
+  };
+  init();
+}, []);
+
 
   const loadModels = async () => {
     const MODEL_URL = process.env.PUBLIC_URL + "/models";
@@ -76,8 +80,12 @@ function Attendance() {
         .withFaceDescriptors();
 
       if (detections.length > 0) {
-        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
-
+if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+  alert("لا يوجد بيانات وجوه مسجلة في قاعدة البيانات!");
+  return;
+}
+const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+        
         for (const d of detections) {
           const bestMatch = faceMatcher.findBestMatch(d.descriptor);
           if (bestMatch.label !== "unknown") {
