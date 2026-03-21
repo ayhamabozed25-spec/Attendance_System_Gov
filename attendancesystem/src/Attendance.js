@@ -91,40 +91,44 @@ function Attendance() {
     }
   };
 
-  const recognizeFace = async () => {
-    if (modelsLoaded) {
-      const detections = await faceapi
-        .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
-        .withFaceLandmarks()
-        .withFaceDescriptors();
+const recognizeFace = async () => {
+  if (!modelsLoaded) return;
 
-      if (detections.length > 0) {
-        if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
-          alert("لم يتم تحميل بيانات المستخدم الحالي!");
-          return;
-        }
+  const detection = await faceapi
+    .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
+    .withFaceLandmarks()
+    .withFaceDescriptor();
 
-        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+  if (!detection) {
+    alert("لم يتم العثور على أي وجه!");
+    return;
+  }
 
-        for (const d of detections) {
-          const bestMatch = faceMatcher.findBestMatch(d.descriptor);
-          if (bestMatch.label !== "unknown") {
-            const user = auth.currentUser;
-            await addDoc(collection(db, "attendance"), {
-              email: user.email,
-              name: bestMatch.name,
-              time: new Date().toISOString(),
-            });
-            alert(`تم تسجيل حضور: ${bestMatch.name} (${user.email})`);
-          } else {
-            alert("وجه غير مسجل لهذا المستخدم!");
-          }
-        }
-      } else {
-        alert("لم يتم العثور على أي وجه!");
-      }
-    }
-  };
+  if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
+    alert("لم يتم تحميل بيانات المستخدم الحالي!");
+    return;
+  }
+
+  const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
+  const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+
+  if (bestMatch.label !== "unknown") {
+    const user = auth.currentUser;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const data = userDoc.data();
+
+    await addDoc(collection(db, "attendance"), {
+      email: user.email,
+      name: data.name,
+      time: new Date().toISOString(),
+    });
+
+    alert(`تم تسجيل حضور: ${data.name} (${user.email})`);
+  } else {
+    alert("وجه غير مسجل لهذا المستخدم!");
+  }
+};
+
 
   return (
     <div>
