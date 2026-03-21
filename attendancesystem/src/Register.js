@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as faceapi from "face-api.js";
-import { db } from "./firebaseConfig";
+import { db ,auth } from "./firebaseConfig";
 import { setDoc, doc } from "firebase/firestore";
 
 function Register() {
@@ -54,33 +54,37 @@ function Register() {
     };
   };
 
-  const captureFace = async () => {
-    if (!modelsLoaded) {
-      alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
-      return;
-    }
+ 
+const captureFace = async (videoRef, modelsLoaded, name) => {
+  if (!modelsLoaded) {
+    alert("النماذج لم تُحمّل بعد، انتظر قليلاً...");
+    return;
+  }
 
-    if (!name || name.trim() === "") {
-      alert("الرجاء إدخال اسم قبل التسجيل");
-      return;
-    }
+  if (!name || name.trim() === "") {
+    alert("الرجاء إدخال اسم قبل التسجيل");
+    return;
+  }
 
-    const detections = await faceapi
-      .detectAllFaces(videoRef.current)
-      .withFaceLandmarks()
-      .withFaceDescriptors();
+  const user = auth.currentUser;
 
-    if (detections.length > 0) {
-      // حفظ أول وجه فقط عند الضغط على زر التسجيل
-      await setDoc(doc(db, "users", name), {
-        name,
-        descriptor: Array.from(detections[0].descriptor),
-      });
-      alert("تم تسجيل المستخدم بنجاح!");
-    } else {
-      alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
-    }
-  };
+  const detections = await faceapi
+    .detectAllFaces(videoRef.current)
+    .withFaceLandmarks()
+    .withFaceDescriptors();
+
+  if (detections.length > 0) {
+    // حفظ أول وجه فقط عند الضغط على زر التسجيل
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      name,
+      descriptor: Array.from(detections[0].descriptor),
+    });
+    alert(`تم تسجيل المستخدم ${name} (${user.email}) بنجاح!`);
+  } else {
+    alert("لم يتم التعرف على وجه، حاول مرة أخرى.");
+  }
+};
 
   return (
     <div>
