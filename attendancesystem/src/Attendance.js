@@ -105,10 +105,10 @@ function Attendance() {
             const user = auth.currentUser;
             await addDoc(collection(db, "attendance"), {
               email: user.email,
-              name: bestMatch.label,
+              name: bestMatch.name,
               time: new Date().toISOString(),
             });
-            alert(`تم تسجيل حضور: ${bestMatch.label} (${user.email})`);
+            alert(`تم تسجيل حضور: ${bestMatch.name} (${user.email})`);
           } else {
             alert("وجه غير مسجل لهذا المستخدم!");
           }
