@@ -1,11 +1,11 @@
 const CACHE_NAME = "face-models-cache-v1";
 const urlsToCache = [
-  "/models/ssd_mobilenetv1_model-weights_manifest.json",
-  "/models/ssd_mobilenetv1_model-shard1.bin",
-  "/models/face_landmark_68_model-weights_manifest.json",
-  "/models/face_landmark_68_model-shard1.bin",
-  "/models/face_recognition_model-weights_manifest.json",
-  "/models/face_recognition_model-shard1.bin"
+ process.env.PUBLIC_URL +"/models/ssd_mobilenetv1_model-weights_manifest.json",
+ process.env.PUBLIC_URL + "/models/ssd_mobilenetv1_model-shard1.bin",
+ process.env.PUBLIC_URL + "/models/face_landmark_68_model-weights_manifest.json",
+  process.env.PUBLIC_URL +"/models/face_landmark_68_model-shard1.bin",
+  process.env.PUBLIC_URL +"/models/face_recognition_model-weights_manifest.json",
+ process.env.PUBLIC_URL + "/models/face_recognition_model-shard1.bin"
 ];
 
 // عند التثبيت، خزّن الملفات في الكاش
