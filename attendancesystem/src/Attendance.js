@@ -71,7 +71,6 @@ const loadModels = async () => {
       const querySnapshot = await getDocs(collection(db, "users"));
       labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        console.log("Loaded user:", data);
         return new faceapi.LabeledFaceDescriptors(
           data.name,
           [new Float32Array(data.descriptor)]
