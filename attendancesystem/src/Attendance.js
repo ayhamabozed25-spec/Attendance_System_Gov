@@ -74,7 +74,7 @@ function Attendance() {
       const data = userDoc.data();
       labeledDescriptorsRef.current = [
         new faceapi.LabeledFaceDescriptors(
-          data.name,
+          user.email,
           [new Float32Array(data.descriptor)]
         ),
       ];
