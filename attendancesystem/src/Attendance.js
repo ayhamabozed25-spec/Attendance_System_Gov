@@ -14,7 +14,7 @@ function Attendance() {
   }, []);
 
   const loadModels = async () => {
-    const MODEL_URL =process.env.PUBLIC_URL + "/models";
+    const MODEL_URL = process.env.PUBLIC_URL + "/models";
     await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
     await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
     await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
@@ -36,71 +36,78 @@ function Attendance() {
 
       setInterval(async () => {
         if (modelsLoaded) {
-            const detection = await faceapi
-             .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
-             .withFaceLandmarks()
-             .withFaceDescriptor();
-       if (detection) {
-          const resizedDetections = faceapi.resizeResults(detection, displaySize);
-          const context = canvasat.getContext("2d");
-          context.clearRect(0, 0, canvasat.width, canvasat.height);
+          const detections = await faceapi
+            .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+            .withFaceLandmarks()
+            .withFaceDescriptors();
 
-          // رسم المستطيل حول الوجه
-          faceapi.draw.drawDetections(canvasat, resizedDetections);
-          // رسم العلامات (العينين، الأنف، إلخ)
-          faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+          if (detections.length > 0) {
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            const context = canvasat.getContext("2d");
+            context.clearRect(0, 0, canvasat.width, canvasat.height);
+
+            // رسم المستطيلات والعلامات لكل وجه
+            faceapi.draw.drawDetections(canvasat, resizedDetections);
+            faceapi.draw.drawFaceLandmarks(canvasat, resizedDetections);
+          }
         }
-      }}, 100);
+      }, 100);
     };
   };
 
   const loadUsers = async () => {
-   if (modelsLoaded) {
-    const querySnapshot = await getDocs(collection(db, "users"));
-    labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return new faceapi.LabeledFaceDescriptors(
-        data.name,
-        [new Float32Array(data.descriptor)]
-      );
-    });
-  }};
+    if (modelsLoaded) {
+      const querySnapshot = await getDocs(collection(db, "users"));
+      labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return new faceapi.LabeledFaceDescriptors(
+          data.name,
+          [new Float32Array(data.descriptor)]
+        );
+      });
+    }
+  };
 
   const recognizeFace = async () => {
-if (modelsLoaded) {
-   const detection = await faceapi
-  .detectSingleFace(videoRef.current, new faceapi.SsdMobilenetv1Options())
-  .withFaceLandmarks()
-  .withFaceDescriptor();
+    if (modelsLoaded) {
+      const detections = await faceapi
+        .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
+        .withFaceLandmarks()
+        .withFaceDescriptors();
 
-if (detection) {
-  const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
-  const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-  if (bestMatch.label !== "unknown") {
-    await addDoc(collection(db, "attendance"), {
-      name: bestMatch.label,
-      time: new Date().toISOString(),
-    });
-    alert(`تم تسجيل حضور: ${bestMatch.label}`);
-  } else {
-    alert("الوجه غير مسجل!");
-  }
-}
+      if (detections.length > 0) {
+        const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
 
-  }};
+        for (const d of detections) {
+          const bestMatch = faceMatcher.findBestMatch(d.descriptor);
+          if (bestMatch.label !== "unknown") {
+            await addDoc(collection(db, "attendance"), {
+              name: bestMatch.label,
+              time: new Date().toISOString(),
+            });
+            alert(`تم تسجيل حضور: ${bestMatch.label}`);
+          } else {
+            alert("وجه غير مسجل!");
+          }
+        }
+      } else {
+        alert("لم يتم العثور على أي وجه!");
+      }
+    }
+  };
 
   return (
     <div>
-    <div style={{ position: "relative", width: "400px", height: "300px" }}>
-      <video ref={videoRef} autoPlay width="400" height="300"></video>
-      <canvas
-         id="overlayat"
-        width="400"
-        height="300"
-        style={{ position: "absolute", top: 0, left: 0 }}
-      ></canvas>
-        </div>
-        
+      <div style={{ position: "relative", width: "400px", height: "300px" }}>
+        <video ref={videoRef} autoPlay width="400" height="300"></video>
+        <canvas
+          id="overlayat"
+          width="400"
+          height="300"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        ></canvas>
+      </div>
+
       <button onClick={startCamera}>تشغيل الكاميرا</button>
       <button onClick={recognizeFace}>تسجيل حضور</button>
     </div>
