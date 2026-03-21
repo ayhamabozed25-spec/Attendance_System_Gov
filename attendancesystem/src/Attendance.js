@@ -111,33 +111,56 @@ const faceMatcher = new faceapi.FaceMatcher(labeledDescriptorsRef.current, 0.6);
     }
   };
 
-  return (
-    <div>
-      <div style={{ position: "relative", width: "400px", height: "300px" }}>
-        <video ref={videoRef} autoPlay width="400" height="300"></video>
-        <canvas
-          id="overlayat"
-          width="400"
-          height="300"
-          style={{ position: "absolute", top: 0, left: 0 }}
-        ></canvas>
-      </div>
-
-      <button onClick={startCamera}>تشغيل الكاميرا</button>
-     <button onClick={() => {
-  if (!modelsLoaded) {
-    alert("النماذج لم تُحمَّل بعد!");
-    return;
-  }
-  if (!labeledDescriptorsRef.current || labeledDescriptorsRef.current.length === 0) {
-    alert("لم يتم تحميل بيانات المستخدمين بعد!");
-    return;
-  }
-  recognizeFace();
-}}>تسجيل حضور</button>
-
+return (
+  <div>
+    <div style={{ position: "relative", width: "100%", maxWidth: "400px" }}>
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        style={{ width: "100%", height: "auto" }}
+        onLoadedMetadata={() => {
+          const canvas = document.getElementById("overlayat");
+          if (videoRef.current) {
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+          }
+        }}
+      ></video>
+      <canvas
+        id="overlayat"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%"
+        }}
+      ></canvas>
     </div>
-  );
+
+    <button onClick={startCamera}>تشغيل الكاميرا</button>
+    <button
+      onClick={() => {
+        if (!modelsLoaded) {
+          alert("النماذج لم تُحمَّل بعد!");
+          return;
+        }
+        if (
+          !labeledDescriptorsRef.current ||
+          labeledDescriptorsRef.current.length === 0
+        ) {
+          alert("لم يتم تحميل بيانات المستخدمين بعد!");
+          return;
+        }
+        recognizeFace();
+      }}
+    >
+      تسجيل حضور
+    </button>
+  </div>
+);
+
 }
 
 export default Attendance;
