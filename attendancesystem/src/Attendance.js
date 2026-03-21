@@ -55,7 +55,7 @@ function Attendance() {
   };
 
   const loadUsers = async () => {
-   
+   if (modelsLoaded) {
     const querySnapshot = await getDocs(collection(db, "users"));
     labeledDescriptorsRef.current = querySnapshot.docs.map(doc => {
       const data = doc.data();
@@ -64,10 +64,10 @@ function Attendance() {
         [new Float32Array(data.descriptor)]
       );
     });
-  };
+  }};
 
   const recognizeFace = async () => {
-
+if (modelsLoaded) {
     const detections = await faceapi
   .detectAllFaces(videoRef.current, new faceapi.SsdMobilenetv1Options())
   .withFaceLandmarks()
@@ -86,7 +86,7 @@ if (detections) {
         alert("الوجه غير مسجل!");
       }
     }
-  };
+  }};
 
   return (
     <div>
