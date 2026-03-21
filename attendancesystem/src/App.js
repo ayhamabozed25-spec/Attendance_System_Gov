@@ -48,15 +48,14 @@ function App() {
           <p>مرحباً {user.email}</p>
           <button onClick={logout}>تسجيل خروج</button>
 
-          {/* إذا كان البريد هو المسموح له، يظهر له زر التسجيل */}
-          {user.email === "alloweduser@example.com" && (
+          {user.email === "abozedayham@gmail.com" && (
             <button onClick={() => setActivePage("register")}>تسجيل جديد</button>
           )}
 
-          {/* زر الحضور يظهر للجميع */}
+         
           <button onClick={() => setActivePage("attendance")}>تسجيل حضور</button>
 
-          {/* عرض المكونات حسب الزر المضغوط */}
+        
           {activePage === "register" &&
             user.email === "abozedayham@gmail.com" && <Register />}
           {activePage === "attendance" && <Attendance />}
